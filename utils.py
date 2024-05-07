@@ -5,31 +5,41 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 import torch.nn as nn
+import torch.nn.functional as F
 import torch
 
 ## globals
-alpha = 4/10
+alpha = 2/10
 binary_indices = [i for i in range(2, 16)]
 continuous_indices = [0] + [i for i in range(16, 20)]
 
 def dist(x, y): ## x :numpy array y: numpy array -> d : float
-    cd = np.mean(np.abs(x.iloc[continuous_indices]**2 - y.iloc[continuous_indices]**2))
+    cd = np.mean(np.abs(x.iloc[continuous_indices] - y.iloc[continuous_indices]))
     bd = np.sum(x.iloc[binary_indices] != y.iloc[binary_indices])
     d = alpha * cd + (1 - alpha) * bd  
     return d
 
 
-class MixedLoss(nn.Module):
-    def __init__(self, alpha=alpha):
-        super(MixedLoss, self).__init__()
-        self.alpha = alpha
-    def forward(self, x, y):
-        cd = torch.mean(torch.abs(x[:, continuous_indices]**2 - y[:, continuous_indices]**2), dim=1)
-        bd = torch.sum(x[:, binary_indices] != y[:, binary_indices], dim=1)
-        d = (self.alpha * cd + (1 - self.alpha) * bd.float())
-        return d.mean()
+def gower_loss(x_original, x_reconstructed, binary_indices, continuous_indices):
+    # Binary indices handling
+    alpha = len(binary_indices)/(len(binary_indices) + len(continuous_indices))
+    x_bin_original = x_original[:, binary_indices]
+    x_bin_reconstructed = torch.sigmoid(x_reconstructed[:, binary_indices])  # Use sigmoid to squash outputs
 
+    # Binary loss (using BCE)
+    binary_loss = F.binary_cross_entropy(x_bin_reconstructed, x_bin_original, reduction='mean')
 
+    # Continuous data handling
+    continuous_indices = [i for i in range(x_original.shape[1]) if i not in binary_indices]
+    x_cont_original = x_original[:, continuous_indices]
+    x_cont_reconstructed = x_reconstructed[:, continuous_indices]
+
+    # Continuous loss (using MSE)
+    continuous_loss = F.mse_loss(x_cont_reconstructed, x_cont_original, reduction='mean')
+
+    # Combine losses
+    total_loss = alpha * binary_loss + (1 - alpha) * continuous_loss
+    return total_loss
 
 # Assume 'pca_df' contains your PCA results and you add 'labels' to this DataFrame
 def plot_TSNE(df, labels = None, dist_matrix = None):
@@ -40,7 +50,7 @@ def plot_TSNE(df, labels = None, dist_matrix = None):
         tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000)
     else :
         tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random')
-    tsne_results = tsne.fit_transform(df)
+    tsne_results = tsne.fit_transform(dist_matrix)
     
     # Create a DataFrame to store results of t-SNE
     tsne_df = pd.DataFrame(data = tsne_results, columns = ['TSNE1', 'TSNE2'])
