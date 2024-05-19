@@ -29,6 +29,11 @@ def main():
     lof_scores = lof.negative_outlier_factor_ ## are scores or distances
 
     ## TODO get a better threshold
+    ## use knee method
+    #import kneed
+    #from kneed import KneeLocator
+    #kn = KneeLocator(range(1, len(lof_scores)), np.sort(lof_scores), curve='convex', direction='decreasing')
+
 
     predictions = lof.fit_predict(df)
     outlier_indices = np.array([0 if i ==False else -1 for i in -1 * (lof_scores < -6)])

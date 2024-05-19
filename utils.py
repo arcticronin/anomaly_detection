@@ -8,6 +8,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+## 3d plots
+import plotly.graph_objects as go
+import numpy as np
+
+
 ## globals
 binary_indices = [i for i in range(1, 16)]
 continuous_indices = [0] + [i for i in range(16, 21)]
@@ -57,8 +62,9 @@ def plot_TSNE(df=None, labels=None, dist_matrix=None):
         print('Error: Either df or dist_matrix must be provided')
         return
 
-    if df is not None and labels is None:
-        labels = np.ones(df.shape[0])
+    if  labels is None:
+        try : labels = np.ones(df.shape[0])
+        except: labels = np.ones(dist_matrix.shape[0])
 
     if dist_matrix is not None:
         tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random')
@@ -120,4 +126,64 @@ def gower_loss(x_original, x_reconstructed, binary_indices, continuous_indices):
     # Combine losses:
     total_loss = alpha * binary_loss + (1 - alpha) * continuous_loss
     return total_loss
-    
+
+
+
+
+def plot_3d_PCA(df, labels = None):
+    if labels is None:
+        labels = np.ones(df.shape[0])
+    # Assume df is your DataFrame containing only numerical features
+    pca = PCA(n_components=3)  # Reduce data to two dimensions if more than two
+    principal_components = pca.fit_transform(df)
+
+    # Create a new DataFrame for the PCA results
+    pca_df = pd.DataFrame(data = principal_components, columns = ['PC1', 'PC2', 'PC3'])
+    pca_df['labels'] = labels
+    # Create a scatter plot with hue based on labels
+    fig = go.Figure(data=[go.Scatter3d(
+        x=pca_df['PC1'],
+        y=pca_df['PC2'],
+        z=pca_df['PC3'],
+        mode='markers',
+        marker=dict(
+            size=6,
+            color=pca_df['labels'], # set color to an array/list of desired values
+            colorscale='Viridis',   # choose a colorscale
+            opacity=0.8
+        )
+    )])
+
+## 3d TSNE
+def plot_3d_TSNE(df=None, labels=None, dist_matrix=None):
+    if df is None and dist_matrix is None:
+        print('Error: Either df or dist_matrix must be provided')
+        return
+
+    if labels is None:
+        try: labels = np.ones(df.shape[0])
+        except: labels = np.ones(len(dist_matrix))
+
+    if dist_matrix is not None:
+        tsne = TSNE(n_components=3, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random')
+        tsne_results = tsne.fit_transform(dist_matrix)
+    else:
+        tsne = TSNE(n_components=3, verbose=1, perplexity=30, n_iter=1000)
+        tsne_results = tsne.fit_transform(df)
+
+    tsne_df = pd.DataFrame(data=tsne_results, columns=['TSNE1', 'TSNE2', 'TSNE3'])
+    tsne_df['labels'] = labels
+
+    fig = go.Figure(data=[go.Scatter3d(
+        x=tsne_df['TSNE1'],
+        y=tsne_df['TSNE2'],
+        z=tsne_df['TSNE3'],
+        mode='markers',
+        marker=dict(
+            size=6,
+            color=tsne_df['labels'],  # set color to an array/list of desired values
+            colorscale='Viridis',  # choose a colorscale
+            opacity=0.8
+        )
+    )])
+    fig.show()
