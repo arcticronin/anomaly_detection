@@ -3,95 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Autoencoder_OLD(nn.Module):
-    def __init__(self, binary_indices):
-        super(Autoencoder_OLD, self).__init__()
-        self.binary_indices = binary_indices
-
-        # Encoder
-        self.encoder = nn.Sequential(
-            nn.Linear(21, 16),
-            nn.ReLU(),
-            nn.Linear( 16, 8),
-            nn.ReLU(),
-            nn.Linear(8, 4)
-        )
-
-        # Decoder
-        self.decoder = nn.Sequential(
-            nn.Linear(4, 8),
-            nn.ReLU(),
-            nn.Linear(8, 16),
-            nn.ReLU(),
-            nn.Linear(16, 21)
-        )
-
-    def forward(self, x):
-        x_encoded = self.encoder(x)
-        x_reconstructed = self.decoder(x_encoded)
-        return x_reconstructed
-
-class GowerLoss_OLD(nn.Module):
-    def __init__(self, binary_indices, continuous_indices):
-        super(GowerLoss_OLD, self).__init__()
-        self.binary_indices = binary_indices
-        self.continuous_indices = continuous_indices
-        self.alpha = len(binary_indices) / (len(binary_indices) + len(continuous_indices))
-
-    def forward(self, x_original, x_reconstructed):
-        # Binary indices handling
-        x_bin_original = (x_original[:, self.binary_indices] >= 0.5).int()
-        x_bin_reconstructed = (x_reconstructed[:, self.binary_indices] >= 0.5).int()
-
-        # Binary loss (counting differing elements)
-        #binary_loss = (torch.sum(x_bin_reconstructed != x_bin_original) / len(self.binary_indices)).float()
-        binary_loss = (torch.abs(x_bin_reconstructed - x_bin_original)).float().mean()
-
-        # Continuous data handling
-        x_cont_original = x_original[:, self.continuous_indices]
-        x_cont_reconstructed = x_reconstructed[:, self.continuous_indices]
-
-        # Continuous loss (using Mean Absolute Error)
-        continuous_loss = F.l1_loss(x_cont_reconstructed, x_cont_original, reduction='mean')
-
-        # Combine losses
-        total_loss = self.alpha * binary_loss + (1 - self.alpha) * continuous_loss
-        return total_loss
-
-class PCA_Autoencoder(nn.Module):
-    def __init__(self, input_dim, binary_indices):
-        super(PCA_Autoencoder, self).__init__()
-        self.binary_indices = binary_indices
-        self.encoder = nn.Sequential(
-            nn.Linear(in_features=input_dim, out_features=16),
-            nn.Linear(16, 8),
-            nn.Linear(8, 4)  # Assuming 4 principal components
-        )
-        self.decoder = nn.Sequential(
-            nn.Linear(4, 8),
-            nn.Linear(8, 16),
-            nn.Linear(16, input_dim)
-        )
-    def forward(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        return decoded
-
-class PCA_Encoder(nn.Module):
-    def __init__(self, input_dim, binary_indices):
-        super(PCA_Encoder, self).__init__()
-        self.binary_indices = binary_indices
-        self.encoder = nn.Sequential(
-            nn.Linear(in_features=input_dim, out_features=16),
-            nn.Linear(16, 8),
-            nn.Linear(8, 4),
-            nn.linear(4,2)# Assuming 4 principal components
-        )
-    def forward(self, x):
-        encoded = self.encoder(x)
-        return encoded
-
-
 
 class Autoencoder(nn.Module):
     def __init__(self, binary_indices, input_dim=21):
@@ -113,45 +24,124 @@ class Autoencoder(nn.Module):
             nn.ReLU(),
             nn.Linear(8, 16),
             nn.ReLU(),
-            nn.Linear(16, input_dim)
+            nn.Linear(16, input_dim),
         )
 
     def forward(self, x):
         x_encoded = self.encoder(x)
         x_reconstructed = self.decoder(x_encoded)
-        return self.post_process(x_reconstructed)
+        return x_reconstructed
 
-    def post_process(self, x_reconstructed):
+    def post_process(self, x_reconstructed): ## using sigmoid outside, but can be an option when the model is trained
         # Apply sigmoid activation to binary features only
         x_reconstructed[:, self.binary_indices] = torch.sigmoid(x_reconstructed[:, self.binary_indices])
         return x_reconstructed
 
 
-class GowerLoss_Prob(nn.Module):
-    def __init__(self, binary_indices, continuous_indices, pos_weight):
-        super(GowerLoss_Prob, self).__init__()
+class Autoencoder_Loss_Prob(nn.Module):
+    def __init__(self, binary_indices, continuous_indices):
+        """
+        Initializes the Autoencoder_Loss_Prob module.
+
+        Args:
+            binary_indices (list of int): Indices of binary features.
+            continuous_indices (list of int): Indices of continuous features.
+        """
+        super(Autoencoder_Loss_Prob, self).__init__()
         self.binary_indices = binary_indices
         self.continuous_indices = continuous_indices
         self.alpha = len(binary_indices) / (len(binary_indices) + len(continuous_indices))
-        self.pos_weight = pos_weight
 
     def forward(self, x_original, x_reconstructed):
-        # Binary indices handling
+        """
+        Computes the weighted loss for autoencoder reconstruction.
+
+        Args:
+            x_original (torch.Tensor): Original input tensor.
+            x_reconstructed (torch.Tensor): Reconstructed input tensor.
+
+        Returns:
+            torch.Tensor: Combined loss value.
+        """
+        # Extract binary features
         x_bin_original = x_original[:, self.binary_indices]
         x_bin_reconstructed = x_reconstructed[:, self.binary_indices]
 
-        # Weighted binary cross-entropy loss
-        binary_loss = F.binary_cross_entropy(
-            x_bin_reconstructed, x_bin_original, pos_weight=self.pos_weight, reduction='mean'
+        # Compute binary cross-entropy loss for binary features
+        binary_loss = F.binary_cross_entropy_with_logits(
+            x_bin_reconstructed, x_bin_original, reduction='mean'
         )
 
-        # Continuous data handling
+        # Extract continuous features
         x_cont_original = x_original[:, self.continuous_indices]
         x_cont_reconstructed = x_reconstructed[:, self.continuous_indices]
 
-        # Continuous loss (using Mean Absolute Error)
+        # Compute mean squared error loss for continuous features
         continuous_loss = F.mse_loss(x_cont_reconstructed, x_cont_original, reduction='mean')
 
-        # Combine losses
+        # Combine losses with respective weights
         total_loss = self.alpha * binary_loss + (1 - self.alpha) * continuous_loss
         return total_loss
+
+
+
+class Autoencoder_Encoder(nn.Module):
+    def __init__(self, binary_indices, input_dim=21):
+        super(Autoencoder_Encoder, self).__init__()
+        self.binary_indices = binary_indices
+
+        # Encoder
+        self.encoder = nn.Sequential(
+            nn.Linear(in_features=input_dim, out_features=16),
+            nn.ReLU(),
+            nn.Linear(16, 8),
+            nn.ReLU(),
+            nn.Linear(8, 3)
+        )
+
+        # Decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(3, 8),
+            nn.ReLU(),
+            nn.Linear(8, 16),
+            nn.ReLU(),
+            nn.Linear(16, input_dim),
+        )
+
+    def forward(self, x):
+        x_encoded = self.encoder(x)
+        return self.decoder(x_encoded)
+    def encode(self, x):
+        return self.encoder(x)
+
+
+class Autoencoder_2D_Encoder(nn.Module):
+    def __init__(self, binary_indices, input_dim=21):
+        super(Autoencoder_2D_Encoder, self).__init__()
+        self.binary_indices = binary_indices
+
+        # Encoder
+        self.encoder = nn.Sequential(
+            nn.Linear(in_features=input_dim, out_features=16),
+            nn.ReLU(),
+            nn.Linear(16, 8),
+            nn.ReLU(),
+            nn.Linear(8, 2)
+        )
+
+        # Decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(2, 8),
+            nn.ReLU(),
+            nn.Linear(8, 16),
+            nn.ReLU(),
+            nn.Linear(16, input_dim),
+        )
+
+    def forward(self, x):
+        x_encoded = self.encoder(x)
+        return self.decoder(x_encoded)
+    def encode(self, x):
+        return self.encoder(x)
+
+

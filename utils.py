@@ -98,4 +98,26 @@ def plot_PCA(df, labels = None):
     sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue='labels', palette='Set2', alpha=0.5)
     plt.title('PCA of Dataset with Labels')
     plt.show()
+
+
+
+def gower_loss(x_original, x_reconstructed, binary_indices, continuous_indices):
+    # Binary indices handling
+    alpha = len(binary_indices)/(len(binary_indices) + len(continuous_indices))
+    x_bin_original = x_original[:, binary_indices]
+    x_bin_reconstructed = torch.sigmoid(x_reconstructed[:, binary_indices])  # Use sigmoid to squash outputs
+    # Binary loss (using BCE)
+    binary_loss = F.binary_cross_entropy(x_bin_reconstructed, x_bin_original, reduction='mean')
+
+    # Continuous data handling
+    continuous_indices = [i for i in range(x_original.shape[1]) if i not in binary_indices]
+    x_cont_original = x_original[:, continuous_indices]
+    x_cont_reconstructed = x_reconstructed[:, continuous_indices]
+
+    # Continuous loss (using MSE)
+    continuous_loss = F.mse_loss(x_cont_reconstructed, x_cont_original, reduction='mean')
+
+    # Combine losses:
+    total_loss = alpha * binary_loss + (1 - alpha) * continuous_loss
+    return total_loss
     
