@@ -16,6 +16,8 @@ importlib.reload(preprocessing) #debug - remove
 # preprocessing tools
 from sklearn.neighbors import LocalOutlierFactor
 
+
+## TODO fix
 def main():
     # load the dataset
     df = preprocessing.load_dataset()
