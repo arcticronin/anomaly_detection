@@ -18,11 +18,16 @@ def load_dataset(categ = False, scaler = False):
         df = df_raw.copy(deep=True)
         cont = list(filter(lambda col: col[-2:] != '=0', df_raw.columns))
         df[cont] = scaler.fit_transform(df_raw[cont])
+        df_raw = df
+
+    if scaler == 'center':
+        df_raw -= df_raw.mean()
         
     if categ == True:
         for column in df_raw:
             if column[-2:] == '=0':
                 #print(column)
                 df_raw[column] = df_raw[column].astype('category')
+
     return df_raw
 

@@ -77,7 +77,7 @@ def plot_TSNE(df=None, labels=None, dist_matrix=None):
     tsne_df['labels'] = labels
 
     plt.figure(figsize=(8, 6))
-    sns.scatterplot(data=tsne_df, x='TSNE1', y='TSNE2', hue=tsne_df['labels'].astype(str), palette='Spectral',
+    sns.scatterplot(data=tsne_df, x='TSNE1', y='TSNE2', hue=tsne_df['labels'].astype(str), palette='cubehelix',
                     alpha=0.5)
     plt.title('t-SNE Visualization of Dataset with Labels')
     plt.show()
