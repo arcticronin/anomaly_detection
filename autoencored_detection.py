@@ -37,6 +37,8 @@ def create_dataloader(df, batch_size=1, shuffle=True):
     return dataloader
 
 def main():
+    ## set seed for reproducibility
+    torch.manual_seed(99)
     df = preprocessing.load_dataset()
     data_tensor = torch.tensor(df.to_numpy(), dtype=torch.float32)
     binary_indices = utils.binary_indices

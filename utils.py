@@ -4,13 +4,12 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
 ## 3d plots
 import plotly.graph_objects as go
-import numpy as np
+
 
 
 ## globals
@@ -45,17 +44,35 @@ def gower_dist(x, y, binary_indices = binary_indices, continuous_indices = conti
     distance = alpha * binary_loss + (1 - alpha) * continuous_loss
     return distance
 
+def plot_TSNE_2(df=None, labels=None, dist_matrix=None):
+    if df is None and dist_matrix is None:
+        print('Error: Either df or dist_matrix must be provided')
+        return
 
+    if labels is None:
+        try:
+            labels = np.ones(df.shape[0])
+        except:
+            labels = np.ones(dist_matrix.shape[0])
 
+    if dist_matrix is not None:
+        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random')
+        tsne_results = tsne.fit_transform(dist_matrix)
+    else:
+        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000)
+        tsne_results = tsne.fit_transform(df)
 
+    tsne_df = pd.DataFrame(data=tsne_results, columns=['TSNE1', 'TSNE2'])
+    tsne_df['labels'] = labels
 
-# Assume 'pca_df' contains your PCA results and you add 'labels' to this DataFrame
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.manifold import TSNE
+    plt.figure(figsize=(20, 12))
+    scatter = plt.scatter(tsne_df['TSNE1'], tsne_df['TSNE2'], c=tsne_df['labels'], cmap='viridis', alpha=0.5)
 
+    plt.colorbar(scatter, label='Probability of an observation being an outlier')
+    plt.title('t-SNE Visualization of Dataset with Labels')
+    plt.xlabel('TSNE1')
+    plt.ylabel('TSNE2')
+    plt.show()
 
 def plot_TSNE(df=None, labels=None, dist_matrix=None):
     if df is None and dist_matrix is None:
@@ -83,12 +100,6 @@ def plot_TSNE(df=None, labels=None, dist_matrix=None):
     plt.show()
 
 
-# Example usage:
-# plot_TSNE(df=my_dataframe, labels=my_labels)
-# plot_TSNE(dist_matrix=my_distance_matrix, labels=my_labels)
-
-
-# Assume 'pca_df' contains your PCA results and you add 'labels' to this DataFrame
 def plot_PCA(df, labels = None):
     if labels is None:
         labels = np.ones(df.shape[0])
@@ -187,3 +198,12 @@ def plot_3d_TSNE(df=None, labels=None, dist_matrix=None):
         )
     )])
     fig.show()
+
+def sigmoid_to_prob(k=6): ## closure parametrized by a k, number of methods
+    # return a sigmoid-like function that takes number of methods that classify a single instance
+    # as an outlier, and returns a probability.
+    h = k/2
+    def inner(x):
+        return (((k* (1 + np.exp(-h)) * (1 + np.exp(h)))/(1 + np.exp(h) -(1 + np.exp(-h))))/
+        (1 + np.exp(-x + h))) - k * ( 1 + np.exp(-h)) / (1 + np.exp(h) - (1 + np.exp(-h)))
+    return inner
