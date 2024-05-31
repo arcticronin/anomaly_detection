@@ -21,11 +21,13 @@ from sklearn.ensemble import IsolationForest
 ## TODO fix
 def main():
     df = preprocessing.load_dataset()
-    isolation_forest = IsolationForest(contamination=0.05, bootstrap=True,
-                                       random_state=123)  # contamination è la percentuale di outliers che dico di trovare
-
+    # contamination is the percentage of expected outliers
+    isolation_forest = IsolationForest(contamination=0.05,
+                                       bootstrap=True,
+                                       random_state=123)
+    # fit the model and get the predictions on the dataset
     outlier_labels = isolation_forest.fit_predict(df)
-
+    # prediction will contain 0 for inliers and -1 for outliers
     return outlier_labels
 
 if __name__ == '__main__':

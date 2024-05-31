@@ -5,11 +5,19 @@ import torch.nn.functional as F
 
 
 class Autoencoder(nn.Module):
+
     def __init__(self, binary_indices, input_dim=21):
+        """
+        Autoencoder module.
+        Args:
+            binary_indices (list of int): Indices of binary features.
+            continuous_indices (list of int): Indices of continuous features.
+            input_dim (int): Number of input features.
+        """
         super(Autoencoder, self).__init__()
         self.binary_indices = binary_indices
 
-        # Encoder
+        # Encoder with latent space = 4
         self.encoder = nn.Sequential(
             nn.Linear(in_features=input_dim, out_features=16),
             nn.ReLU(),
@@ -28,21 +36,26 @@ class Autoencoder(nn.Module):
         )
 
     def forward(self, x):
+        # encodes and decodes input
         x_encoded = self.encoder(x)
         x_reconstructed = self.decoder(x_encoded)
         return x_reconstructed
 
-    def post_process(self, x_reconstructed): ## using sigmoid outside, but can be an option when the model is trained
-        # Apply sigmoid activation to binary features only
-        x_reconstructed[:, self.binary_indices] = torch.sigmoid(x_reconstructed[:, self.binary_indices])
-        return x_reconstructed
+    ## TODO remove if not used
+    # def post_process(self, x_reconstructed):
+    #     # applies sigmoid activation to binary features only
+    #     # we preferred to use a sigmoid function , but can be an option when the model is trained
+    #     x_reconstructed[:, self.binary_indices] = torch.sigmoid(x_reconstructed[:, self.binary_indices])
+    #     return x_reconstructed
 
 
 class Autoencoder_Loss_Prob(nn.Module):
+    """
+    Custom loss function for autoencoder training with binary and continuous data
+    """
     def __init__(self, binary_indices, continuous_indices):
         """
         Initializes the Autoencoder_Loss_Prob module.
-
         Args:
             binary_indices (list of int): Indices of binary features.
             continuous_indices (list of int): Indices of continuous features.
@@ -83,7 +96,7 @@ class Autoencoder_Loss_Prob(nn.Module):
         total_loss = self.alpha * binary_loss + (1 - self.alpha) * continuous_loss
         return total_loss
 
-
+## Autoencoder with 2D and 3D latent spaces, used for visualization
 
 class Autoencoder_Encoder(nn.Module):
     def __init__(self, binary_indices, input_dim=21):

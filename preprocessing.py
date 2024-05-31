@@ -1,9 +1,16 @@
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler, RobustScaler
+from sklearn.preprocessing import RobustScaler
 
 
 def load_dataset(categ = False, scaler = False):
+    '''
+    Load the dataset and preprocess it
+    :param categ: boolean, if True, the columns that end with '=0' are converted to categorical
+    :param scaler: string,
+        if 'robust', the data is scaled using RobustScaler
+        if 'center', the mean is subtracted from the data
+    :return: pandas dataframe
+    '''
     df_raw = pd.read_csv('Unsupervised Learning 23-24 - Project Dataset.csv', sep=';').iloc[:,1:-2]
     
     object_columns = df_raw.select_dtypes(include=['object']).columns
