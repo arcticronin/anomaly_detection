@@ -1,0 +1,13 @@
+kneed==0.8.5
+matplotlib @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-suite_1700509454821/work
+matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-inline_1660814786464/work
+numba==0.59.0
+numpy @ file:///home/conda/feedstock_root/build_artifacts/numpy_1707225359967/work/dist/numpy-1.26.4-cp312-cp312-linux_x86_64.whl#sha256=031b7d6b2e5e604d9e21fc21be713ebf28ce133ec872dce6de006742d5e49bab
+pandas @ file:///home/conda/feedstock_root/build_artifacts/pandas_1699670107640/work
+plotly==5.22.0
+scikit-learn @ file:///home/conda/feedstock_root/build_artifacts/scikit-learn_1698224880679/work
+SciPy @ file:///home/conda/feedstock_root/build_artifacts/scipy-split_1700812483254/work/dist/scipy-1.11.4-cp312-cp312-linux_x86_64.whl#sha256=4a38826a640d20e98d8709f58ee44b7261c2094720d230a515f23c9212bed074
+seaborn @ file:///home/conda/feedstock_root/build_artifacts/seaborn-split_1704312987503/work
+sklearn-pandas==2.2.0
+torch==2.2.2
+torch-summary==1.4.5
