@@ -18,7 +18,7 @@ def load_dataset(categ = False, scaler = False):
                                 'Unsupervised Learning 23-24 - Project Dataset.csv')
 
     df_raw = pd.read_csv(dataset_path, sep=';').iloc[:, 1:-2]
-    
+
     object_columns = df_raw.select_dtypes(include=['object']).columns
     for column in object_columns:
         try:

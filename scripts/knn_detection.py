@@ -12,11 +12,7 @@ from sklearn.neighbors import NearestNeighbors
 from kneed import KneeLocator
 
 
-def main():
-    # load the dataset
-    df = preprocessing.load_dataset()
-    distance_matrix = gower.gower_matrix(df)
-
+def main(distance_matrix):
     # selected k = 16 from hyperparameter tuning in knn notebook
     k = 16
     neigh = NearestNeighbors(n_neighbors=k, metric='precomputed')

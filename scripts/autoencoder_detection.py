@@ -47,9 +47,9 @@ def create_dataloader(df, batch_size=1, shuffle=True):
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
     return dataloader
 
-def main():
+def main(dataframe):
     torch.manual_seed(99)
-    df = preprocessing.load_dataset()
+    df = dataframe
     data_tensor = torch.tensor(df.to_numpy(), dtype=torch.float32)
     binary_indices = utils.binary_indices
     continuous_indices = utils.continuous_indices
@@ -62,7 +62,7 @@ def main():
     model = models.Autoencoder_Encoder(binary_indices=binary_indices)
 
     # setting training parameters
-    epochs = 50
+    epochs = 50 # 50
     optimizer = optim.Adam(model.parameters(), lr=0.01)
 
     # used to reduce the learning rate by half every 10 epochs

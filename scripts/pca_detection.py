@@ -7,17 +7,14 @@ from sklearn.decomposition import PCA
 from scipy.stats import chi2
 
 
-def main():
-    df = preprocessing.load_dataset()
-    dist_matrix = gower.gower_matrix(df)
-
+def main(distance_matrix):
     # Design parameters (more details in the pca notebook)
     # minimum number of compontent that explain 0.98 of the variance
     NCOMP = 8
 
     pca = PCA(n_components=NCOMP)
     # fit and transform the data
-    pca_result = pca.fit_transform(dist_matrix)
+    pca_result = pca.fit_transform(distance_matrix)
     print('PCA: explained variation per principal component: {}'
     .format(pca.explained_variance_ratio_.round(5)))
 
