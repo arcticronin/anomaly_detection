@@ -56,10 +56,13 @@ def plot_TSNE_2(df=None, labels=None, dist_matrix=None):
             labels = np.ones(dist_matrix.shape[0])
 
     if dist_matrix is not None:
-        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random')
+        tsne = TSNE(n_components=2, verbose=1, perplexity=30,
+                    n_iter=1000, metric="precomputed", init='random',
+                    random_state=42)
         tsne_results = tsne.fit_transform(dist_matrix)
     else:
-        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000)
+        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000,
+                    random_state=42)
         tsne_results = tsne.fit_transform(df)
 
     tsne_df = pd.DataFrame(data=tsne_results, columns=['TSNE1', 'TSNE2'])
@@ -84,10 +87,11 @@ def plot_TSNE(df=None, labels=None, dist_matrix=None):
         except: labels = np.ones(dist_matrix.shape[0])
 
     if dist_matrix is not None:
-        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random')
+        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, metric="precomputed", init='random',
+                    random_state=42)
         tsne_results = tsne.fit_transform(dist_matrix)
     else:
-        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000)
+        tsne = TSNE(n_components=2, verbose=1, perplexity=30, n_iter=1000, random_state=42)
         tsne_results = tsne.fit_transform(df)
 
     tsne_df = pd.DataFrame(data=tsne_results, columns=['TSNE1', 'TSNE2'])
@@ -118,7 +122,7 @@ def plot_PCA(df, labels = None):
 
 
 
-def gower_loss(x_original, x_reconstructed, binary_indices, continuous_indices):
+def gower_loss(x_original, x_reconstructed, binary_indices, continuous_indices) -> float:
     # Binary indices handling
     alpha = len(binary_indices)/(len(binary_indices) + len(continuous_indices))
     x_bin_original = x_original[:, binary_indices]
@@ -199,11 +203,25 @@ def plot_3d_TSNE(df=None, labels=None, dist_matrix=None):
     )])
     fig.show()
 
-def sigmoid_to_prob(k=6): ## closure parametrized by a k, number of methods
+def sigmoid_to_prob(k=6) -> callable: ## closure parametrized by a k, number of methods
     # return a sigmoid-like function that takes number of methods that classify a single instance
     # as an outlier, and returns a probability.
     h = k/2
-    def inner(x):
+    def inner(x) -> float:
         return (((k* (1 + np.exp(-h)) * (1 + np.exp(h)))/(1 + np.exp(h) -(1 + np.exp(-h))))/
         (1 + np.exp(-x + h))) - k * ( 1 + np.exp(-h)) / (1 + np.exp(h) - (1 + np.exp(-h)))
+    return inner
+
+def jaccard_index(anom_label=-1) -> callable:
+    ## closure parametrized by a label:
+    # takes 2 lists of labels and compares the prediction of the anomalies using
+    ## jaccard index, measure of comparison of 2 sets
+    def inner(l1,l2) -> float:
+        set1 = set(i for (i, label) in enumerate(l1) if label == anom_label)
+        set2 = set(i for (i, label) in enumerate(l2) if label == anom_label)
+        intersection = set1.intersection(set2)
+        union = set1.union(set2)
+        if not union:
+            return 1.0 if not intersection else 0.0 # 1 if both are empty, else 0 if only one is empty
+        return len(intersection) / len(union)
     return inner

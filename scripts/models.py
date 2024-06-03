@@ -107,7 +107,7 @@ class Autoencoder_Encoder(nn.Module):
         self.encoder = nn.Sequential(
             nn.Linear(in_features=input_dim, out_features=16),
             nn.ReLU(),
-            #nn.Dropout(0.2),
+            # nn.Dropout(0.1),
             nn.Linear(16, 8),
             nn.ReLU(),
             nn.Linear(8, 3)
@@ -119,7 +119,7 @@ class Autoencoder_Encoder(nn.Module):
             nn.ReLU(),
             nn.Linear(8, 16),
             nn.ReLU(),
-            #nn.Dropout(0.2),
+            # nn.Dropout(0.1),
             nn.Linear(16, input_dim),
         )
 
