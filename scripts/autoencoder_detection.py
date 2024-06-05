@@ -48,6 +48,7 @@ def create_dataloader(df, batch_size=1, shuffle=True):
     return dataloader
 
 def main(dataframe):
+    torch.manual_seed(99)
     df = dataframe
     data_tensor = torch.tensor(df.to_numpy(), dtype=torch.float32)
     binary_indices = utils.binary_indices
@@ -62,13 +63,11 @@ def main(dataframe):
 
     # setting training parameters
     epochs = 50
-    torch.manual_seed(42)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
-    scheduler = StepLR(optimizer, step_size=25, gamma=0.5)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
     criterion = models.Autoencoder_Loss_Prob(binary_indices=binary_indices,
                                              continuous_indices=continuous_indices)
     # training loop
-    torch.manual_seed(42)
     for epoch in range(epochs):
         for data in dataloader:
             model.train()
@@ -96,12 +95,13 @@ def main(dataframe):
                        sorted_distances,
                        curve='convex',
                        direction='increasing',
-                       S=10)
+                       S= 2.3)
     treshold = knee.knee_y
-    print(f"treshold is: {treshold:.4f}")
+    #print(f"treshold is: {treshold:.4f}")
     # flag outliers as -1, inliers as 0
     outlier_index = [-1 if i > treshold / 2 else 0 for i in distances]
-    print(f"percentage of outliers is: {-np.sum(outlier_index) / len(outlier_index) * 100: .2f}%")
+    #print(f"percentage of outliers is: {-np.sum(outlier_index) / len(outlier_index) * 100: .2f}%")
+    print(f"number of outliers is: {-np.sum(outlier_index)}")
 
     return outlier_index
 

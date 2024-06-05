@@ -208,8 +208,9 @@ def sigmoid_to_prob(k=6) -> callable: ## closure parametrized by a k, number of 
     # as an outlier, and returns a probability.
     h = k/2
     def inner(x) -> float:
-        return (((k* (1 + np.exp(-h)) * (1 + np.exp(h)))/(1 + np.exp(h) -(1 + np.exp(-h))))/
-        (1 + np.exp(-x + h))) - k * ( 1 + np.exp(-h)) / (1 + np.exp(h) - (1 + np.exp(-h)))
+        result = ((((k * (1 + np.exp(-h)) * (1 + np.exp(h)))/(1 + np.exp(h) -(1 + np.exp(-h))))/
+        (1 + np.exp(-x + h))) - k * ( 1 + np.exp(-h)) / (1 + np.exp(h) - (1 + np.exp(-h))))/k
+        return np.round(result, decimals=2)
     return inner
 
 def jaccard_index(anom_label=-1) -> callable:
@@ -224,4 +225,13 @@ def jaccard_index(anom_label=-1) -> callable:
         if not union:
             return 1.0 if not intersection else 0.0 # 1 if both are empty, else 0 if only one is empty
         return len(intersection) / len(union)
+    return inner
+
+def agreement_index(label = -1) -> callable:
+    ## closure parametrized by a label:
+    # takes 2 lists of labels and compares the prediction of the only anomalies.
+    # biased if lists are of very different sizes
+    def inner(method_a, method_b):
+        return (np.sum(method_a + method_b == 2 * label)/
+         np.sum(method_a == label))
     return inner
