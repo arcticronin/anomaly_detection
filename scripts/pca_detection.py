@@ -8,6 +8,9 @@ from scipy.stats import chi2
 
 
 def main(distance_matrix):
+    ## preprocessing distance matrix to mimic a covariance matrix (see linked paper)
+    distance_matrix = np.ones(distance_matrix.shape) - distance_matrix
+
     # Design parameters (more details in the pca notebook)
     # minimum number of compontent that explain 0.98 of the variance
     NCOMP = 8
