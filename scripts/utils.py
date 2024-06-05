@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 
 ## globals
 binary_indices = [i for i in range(1, 16)]
+# binary_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15] testing without dimension 14
 continuous_indices = [0] + [i for i in range(16, 21)]
 alpha = len(binary_indices) / len(continuous_indices + binary_indices)
 
@@ -225,13 +226,4 @@ def jaccard_index(anom_label=-1) -> callable:
         if not union:
             return 1.0 if not intersection else 0.0 # 1 if both are empty, else 0 if only one is empty
         return len(intersection) / len(union)
-    return inner
-
-def agreement_index(label = -1) -> callable:
-    ## closure parametrized by a label:
-    # takes 2 lists of labels and compares the prediction of the only anomalies.
-    # biased if lists are of very different sizes
-    def inner(method_a, method_b):
-        return (np.sum(method_a + method_b == 2 * label)/
-         np.sum(method_a == label))
     return inner
