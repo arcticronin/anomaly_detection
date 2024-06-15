@@ -5,6 +5,7 @@ The project folder has this structure:
 
 ``` 
 - main.pynb
+- report.pdf
   - scripts/ # folder contains the outlier detection algorithms
   - notebooks/ # contains the test we made in order to select hyperparameters
   - output/ # contains the result of our analysis: the dataset with the added column containing outlier probabilities
